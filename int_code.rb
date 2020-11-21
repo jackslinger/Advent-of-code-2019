@@ -16,6 +16,10 @@ class IntCode
       when 2 then multiply
       when 3 then input
       when 4 then output
+      when 5 then jump_if_true
+      when 6 then jump_if_false
+      when 7 then less_than
+      when 8 then equal
       when 99
         break
       else
@@ -52,6 +56,40 @@ class IntCode
   def output
     puts parameter(1)
     @pointer += 2
+  end
+
+  def jump_if_true
+    if parameter(1) != 0
+      @pointer = parameter(2)
+    else
+      @pointer += 3
+    end
+  end
+
+  def jump_if_false
+    if parameter(1) == 0
+      @pointer = parameter(2)
+    else
+      @pointer += 3
+    end
+  end
+
+  def less_than
+    if parameter(1) < parameter(2)
+      @memory[memory[pointer + 3]] = 1
+    else
+      @memory[memory[pointer + 3]] = 0
+    end
+    @pointer += 4
+  end
+  
+  def equal
+    if parameter(1) == parameter(2)
+      @memory[memory[pointer + 3]] = 1
+    else
+      @memory[memory[pointer + 3]] = 0
+    end
+    @pointer += 4
   end
 
   def parameter(parameter_num)
