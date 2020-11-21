@@ -1,34 +1,5 @@
-class IntCode
-  def initialize(input)
-    @tape = input.dup
-    @pointer = 0
-  end
-
-  def run!
-    loop do
-      instruction = @tape[@pointer]
-      case instruction
-      when 1
-        a = @tape[@tape[@pointer + 1]]
-        b = @tape[@tape[@pointer + 2]]
-        result = a + b
-        @tape[@tape[@pointer + 3]] = result
-      when 2
-        a = @tape[@tape[@pointer + 1]]
-        b = @tape[@tape[@pointer + 2]]
-        result = a * b
-        @tape[@tape[@pointer + 3]] = result
-      when 99
-        break
-      else
-        raise "Invalid OpCode '#{instruction}' at position #{@pointer}"
-      end
-      @pointer += 4
-    end
-    return @tape
-  end
-end
-
+#!/usr/bin/env ruby
+require_relative '../int_code'
 
 def create_memory(program, noun:, verb:)
   program[1] = noun
