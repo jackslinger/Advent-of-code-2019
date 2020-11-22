@@ -13,6 +13,7 @@ class IntCode
     @memory = memory.dup
     @current_instruction = nil
     @pointer = 0
+    @relative_base = 0
   end
 
   def run!
@@ -29,6 +30,7 @@ class IntCode
         when 6 then jump_if_false
         when 7 then less_than
         when 8 then equal
+        when 9 then update_relative_base
         when 99
           break
         else
@@ -45,7 +47,7 @@ class IntCode
     a = parameter(1)
     b = parameter(2)
     result = a + b
-    @memory[memory[pointer + 3]] = result
+    @memory[parameter_address(3)] = result
     @pointer += 4
   end
 
@@ -53,7 +55,7 @@ class IntCode
     a = parameter(1)
     b = parameter(2)
     result = a * b
-    @memory[memory[pointer + 3]] = result
+    @memory[parameter_address(3)] = result
     @pointer += 4
   end
 
@@ -62,7 +64,7 @@ class IntCode
     if value.nil?
       sleep 0.0001
     else
-      @memory[memory[pointer + 1]] = value
+      @memory[parameter_address(1)] = value
       @pointer += 2
     end
   end
@@ -90,28 +92,43 @@ class IntCode
 
   def less_than
     if parameter(1) < parameter(2)
-      @memory[memory[pointer + 3]] = 1
+      @memory[parameter_address(3)] = 1
     else
-      @memory[memory[pointer + 3]] = 0
+      @memory[parameter_address(3)] = 0
     end
     @pointer += 4
   end
   
   def equal
     if parameter(1) == parameter(2)
-      @memory[memory[pointer + 3]] = 1
+      @memory[parameter_address(3)] = 1
     else
-      @memory[memory[pointer + 3]] = 0
+      @memory[parameter_address(3)] = 0
     end
     @pointer += 4
   end
 
-  def parameter(parameter_num)
-    if current_instruction.digits[parameter_num + 1] == 1
+  def update_relative_base
+    @relative_base += parameter(1)
+    @pointer += 2
+  end
+
+  def parameter_address(parameter_num)
+    code = current_instruction.digits[parameter_num + 1].to_i
+    case code
+    when 0
       memory[pointer + parameter_num]
+    when 1
+      pointer + parameter_num
+    when 2
+      @relative_base + memory[pointer + parameter_num]
     else
-      memory[memory[pointer + parameter_num]]
+      raise "Unknown parameter code: #{code}"
     end
+  end
+
+  def parameter(parameter_num)
+    memory[parameter_address(parameter_num)]
   end
 
 end
