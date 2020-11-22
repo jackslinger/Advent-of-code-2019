@@ -1,29 +1,39 @@
-class IntCode
-  attr_reader :memory, :pointer, :current_instruction
+class StdinWrapper
+  def self.poll
+    gets.chomp.to_i
+  end
+end
 
-  def initialize(memory)
+class IntCode
+  attr_reader :memory, :pointer, :current_instruction, :thread
+
+  def initialize(memory, input: StdinWrapper, output: $stdout)
+    @input = input
+    @output = output
     @memory = memory.dup
     @current_instruction = nil
     @pointer = 0
   end
 
   def run!
-    loop do
-      @current_instruction = memory[pointer]
-      op_code = current_instruction % 100
-      case op_code
-      when 1 then add
-      when 2 then multiply
-      when 3 then input
-      when 4 then output
-      when 5 then jump_if_true
-      when 6 then jump_if_false
-      when 7 then less_than
-      when 8 then equal
-      when 99
-        break
-      else
-        raise "Invalid OpCode #{op_code} from instruction #{current_instruction} at position #{pointer}"
+    @thread = Thread.new do
+      loop do
+        @current_instruction = memory[pointer]
+        op_code = current_instruction % 100
+        case op_code
+        when 1 then add
+        when 2 then multiply
+        when 3 then input
+        when 4 then output
+        when 5 then jump_if_true
+        when 6 then jump_if_false
+        when 7 then less_than
+        when 8 then equal
+        when 99
+          break
+        else
+          raise "Invalid OpCode #{op_code} from instruction #{current_instruction} at position #{pointer}"
+        end
       end
     end
     return memory
@@ -48,13 +58,17 @@ class IntCode
   end
 
   def input
-    value = gets.chomp.to_i
-    @memory[memory[pointer + 1]] = value
-    @pointer += 2
+    value = @input.poll
+    if value.nil?
+      sleep 0.0001
+    else
+      @memory[memory[pointer + 1]] = value
+      @pointer += 2
+    end
   end
 
   def output
-    puts parameter(1)
+    @output.puts parameter(1)
     @pointer += 2
   end
 
